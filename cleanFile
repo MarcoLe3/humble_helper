@@ -12,19 +12,18 @@ def remove_social_media_urls(text):
     return cleaned_text
 
 if __name__ == "__main__":
-    input_path = "linkTextFile/external_links_from_research_pages.txt"
-    output_path = "linkTextFile/cleaned_external_links_pages.txt"
+    input_path = "linkTextFile/external_links_from_research.txt"
+    output_path = "linkTextFile/cleaned_external_links.txt"
 
-    if not os.path.exists(input_path):
-        print(f"❌ Input file not found: {input_path}")
-        exit(1)
-
+    # Read the original text
     with open(input_path, "r", encoding="utf-8") as infile:
         raw_text = infile.read()
 
+    # Clean the text
     cleaned = remove_social_media_urls(raw_text)
 
+    # Save the cleaned text in the same folder with a new name
     with open(output_path, "w", encoding="utf-8") as outfile:
         outfile.write(cleaned.strip())
 
-    print(f"✅ Cleaned file saved as: {output_path}")
+    print("✅ Cleaned file saved as:", output_path)
