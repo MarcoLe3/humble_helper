@@ -8,10 +8,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- Custom CSS Styling (with fixed sidebar) ---
+# --- Custom CSS Styling ---
 st.markdown("""
     <style>
-    /* Fixed Sidebar */
     .fixed-sidebar {
         position: fixed;
         left: 0;
@@ -29,13 +28,11 @@ st.markdown("""
         box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
     }
 
-    /* Push content right to accommodate sidebar */
     .stApp {
-        margin-left: 260px !important;
         background-color: #e6e6e6;
+        margin-left: 260px !important;
     }
 
-    /* Header bar */
     header[data-testid="stHeader"] {
         background-color: #e6e6e6 !important;
         display: flex;
@@ -79,32 +76,59 @@ st.markdown("""
         padding: 10px 0;
     }
 
-    div[data-baseweb="input"] {
-        background-color: #dddddd !important;
-        border-radius: 20px !important;
+    section[data-testid="stForm"] {
+        background-color: #cfe3dc !important;
+        padding: 1rem;
+        border-top: 1px solid #aaa;
+        margin-bottom: 1rem;
     }
 
-    div[data-baseweb="input"] textarea {
-        background-color: #dddddd !important;
-        color: #000000 !important;
-        border-radius: 20px !important;
-        min-height: 80px !important;
-        font-size: 16px !important;
+    /* Redesigned Search Bar */
+    div[data-testid="column"] > div {
+        display: flex;
+        align-items: center;
+    }
+
+    .search-bar select,
+    .search-bar input,
+    .search-bar button {
+        height: 45px !important;
+        border: none;
+        border-radius: 8px;
+        padding: 0 12px;
+        background-color: #26262f;
+        color: white;
+        font-size: 15px;
+    }
+
+    .search-bar button {
+        width: 45px;
+        padding: 0;
+        font-size: 20px;
+        background-color: #191920;
+        border-radius: 10px;
+        box-shadow: inset 0 0 0 1px #444;
+        transition: background 0.2s ease;
+        cursor: pointer;
+    }
+
+    .search-bar button:hover {
+        background-color: #333;
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- Fixed Sidebar Content ---
+# --- Sidebar HTML ---
 st.markdown("""
 <div class="fixed-sidebar">
     <div>
-        <h3 style="font-family: serif;">Cal Poly <br> <span style='color: #FDB515;'>Humboldt.</span></h3>
-        <p style="font-size: 13px;">Welcome to Humboldt Helper, your AI guide for research files, links, and opportunities across the California State Polytechnic University, Humboldt Office of Research.</p>
-        <p style="font-size: 12px;"><em>Need help? Just ask!</em></p>
+        <h3 style="font-family: serif; line-height: 1.2;">Cal Poly <br> <span style='color: #FDB515;'>Humboldt.</span></h3>
+        <p style="font-size: 13px;">Welcome to Humboldt Helper, your AI guide to find the right files, links, and information across the California State Polytechnic University, Humboldt Office of Research.</p>
+        <p style="font-size: 12px;"><em>Need help? Just Ask!</em></p>
     </div>
     <div style="font-size: 14px;">
         <strong>Quick Contacts</strong><br>
-        <ul style="padding-left: 1rem;">
+        <ul style="padding-left: 1rem; list-style-type: disc;">
             <li>Website: Humboldt Research</li>
             <li>Phone:</li>
             <li>Email:</li>
@@ -125,7 +149,7 @@ st.markdown("""
 def get_bedrock_client() -> Any:
     return boto3.client('bedrock-runtime', region_name='us-west-2')
 
-# --- Claude Model Invocation ---
+# --- Claude Model Call ---
 def invoke_model(messages: List[Dict[str, str]]) -> str:
     client = get_bedrock_client()
     bedrock_messages = [{
@@ -150,21 +174,37 @@ if "messages" not in st.session_state:
         "content": "Hi! I’m Humboldt Helper. I can help you locate research documents, funding opportunities, and resources regarding research. How can I assist you?"
     }]
 
-# --- Chat History ---
+# --- Display Chat History ---
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# --- User Input ---
-if prompt := st.chat_input("Ask about grants, documents, or research..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
+# --- Redesigned Search Form ---
+with st.form("search_form", clear_on_submit=True):
+    st.markdown('<div class="search-bar">', unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1.5, 5, 0.6])
 
-    with st.chat_message("user"):
-        st.write(prompt)
+    with col1:
+        category = st.selectbox("Select a topic", ["Research", "Meeting Minutes"], key="category_input", label_visibility="collapsed")
 
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = invoke_model(st.session_state.messages)
+    with col2:
+        query = st.text_input("Enter your question or keywords", placeholder="Ask about meeting minutes or research...", key="query_input", label_visibility="collapsed")
 
-    st.session_state.messages.append({"role": "assistant", "content": response})
-    st.rerun()
+    with col3:
+        submitted = st.form_submit_button("➤")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    if submitted and query.strip():
+        user_prompt = f"[{category}] {query.strip()}"
+        st.session_state.messages.append({"role": "user", "content": user_prompt})
+
+        with st.chat_message("user"):
+            st.write(user_prompt)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                response = invoke_model(st.session_state.messages)
+
+        st.session_state.messages.append({"role": "assistant", "content": response})
+        st.rerun()
