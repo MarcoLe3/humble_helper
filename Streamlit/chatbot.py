@@ -135,7 +135,9 @@ st.markdown(f"""
             <img src="data:image/png;base64,{{image_base64}}" width="120"/>
         </div>
         -->
-        <h3 style="font-family: serif; line-height: 1.2;">Cal Poly <br> <span style='color: #FDB515;'>Humboldt.</span></h3>
+        <h3 style="font-family: serif; line-height: 1.2; margin-bottom: 1.25rem;">
+            Cal Poly <br> <span style='color: #FDB515;'>Humboldt.</span>
+        </h3>
         <p>
             Welcome to Humboldt Helper, your AI guide to find the right files, links, and information across the California State Polytechnic University, Humboldt Office of Research.
         </p>
