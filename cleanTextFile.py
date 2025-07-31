@@ -16,7 +16,7 @@ if __name__ == "__main__":
     output_path = "linkTextFile/cleaned_external_links_pages.txt"
 
     if not os.path.exists(input_path):
-        print(f"❌ Input file not found: {input_path}")
+        print(f" Input file not found: {input_path}")
         exit(1)
 
     with open(input_path, "r", encoding="utf-8") as infile:
@@ -27,4 +27,4 @@ if __name__ == "__main__":
     with open(output_path, "w", encoding="utf-8") as outfile:
         outfile.write(cleaned.strip())
 
-    print(f"✅ Cleaned file saved as: {output_path}")
+    print(f" Cleaned file saved as: {output_path}")
