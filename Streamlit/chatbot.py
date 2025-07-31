@@ -1,6 +1,7 @@
 import streamlit as st
 import boto3
 from typing import List, Dict, Any
+# import base64  # Commented out since image is disabled
 
 # --- Page Setup ---
 st.set_page_config(
@@ -8,10 +9,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- Custom CSS Styling ---
+# --- Google Fonts (Inter Thin) ---
 st.markdown("""
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap" rel="stylesheet">
+""", unsafe_allow_html=True)
+
+# --- Custom CSS Styling ---
+st.markdown(f"""
     <style>
-    .fixed-sidebar {
+    .fixed-sidebar {{
         position: fixed;
         left: 0;
         top: 0;
@@ -20,29 +26,31 @@ st.markdown("""
         background-color: #004C46;
         color: white;
         padding: 2rem 1rem 1rem 1rem;
-        font-family: sans-serif;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        font-weight: 300;
         z-index: 9999;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-    }
+    }}
 
-    .stApp {
+    .stApp {{
         background-color: #e6e6e6;
         margin-left: 260px !important;
-    }
+    }}
 
-    header[data-testid="stHeader"] {
+    header[data-testid="stHeader"] {{
         background-color: #e6e6e6 !important;
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding: 0 2rem 0 1rem;
         border-bottom: 1px solid #ccc;
-    }
+    }}
 
-    header[data-testid="stHeader"]::after {
+    header[data-testid="stHeader"]::after {{
         content: "AI SUMMER CAMP";
         color: #b8860b;
         font-weight: bold;
@@ -51,47 +59,47 @@ st.markdown("""
         right: 2rem;
         top: 1.5rem;
         font-family: sans-serif;
-    }
+    }}
 
-    .main-title {
+    .main-title {{
         font-size: 40px;
         font-family: serif;
         color: #000000;
         margin-bottom: 0.25rem;
-    }
+        font-weight: bold;
+    }}
 
-    .subtitle {
+    .subtitle {{
         font-size: 18px;
         margin-top: 0.5rem;
         color: #333333;
         font-family: sans-serif;
-    }
+    }}
 
-    .stChatMessage div[data-testid="stMarkdownContainer"] p {
+    .stChatMessage div[data-testid="stMarkdownContainer"] p {{
         font-family: serif;
         color: #000000 !important;
-    }
+    }}
 
-    .stChatMessage {
+    .stChatMessage {{
         padding: 10px 0;
-    }
+    }}
 
-    section[data-testid="stForm"] {
+    section[data-testid="stForm"] {{
         background-color: #cfe3dc !important;
         padding: 1rem;
         border-top: 1px solid #aaa;
         margin-bottom: 1rem;
-    }
+    }}
 
-    /* Redesigned Search Bar */
-    div[data-testid="column"] > div {
+    div[data-testid="column"] > div {{
         display: flex;
         align-items: center;
-    }
+    }}
 
     .search-bar select,
     .search-bar input,
-    .search-bar button {
+    .search-bar button {{
         height: 45px !important;
         border: none;
         border-radius: 8px;
@@ -99,9 +107,9 @@ st.markdown("""
         background-color: #26262f;
         color: white;
         font-size: 15px;
-    }
+    }}
 
-    .search-bar button {
+    .search-bar button {{
         width: 45px;
         padding: 0;
         font-size: 20px;
@@ -110,37 +118,52 @@ st.markdown("""
         box-shadow: inset 0 0 0 1px #444;
         transition: background 0.2s ease;
         cursor: pointer;
-    }
+    }}
 
-    .search-bar button:hover {
+    .search-bar button:hover {{
         background-color: #333;
-    }
+    }}
     </style>
 """, unsafe_allow_html=True)
 
-# --- Sidebar HTML ---
-st.markdown("""
+# --- Sidebar Content ---
+st.markdown(f"""
 <div class="fixed-sidebar">
     <div>
+        <!--
+        <div style='text-align: center; margin-bottom: 1rem;'>
+            <img src="data:image/png;base64,{{image_base64}}" width="120"/>
+        </div>
+        -->
         <h3 style="font-family: serif; line-height: 1.2;">Cal Poly <br> <span style='color: #FDB515;'>Humboldt.</span></h3>
-        <p style="font-size: 13px;">Welcome to Humboldt Helper, your AI guide to find the right files, links, and information across the California State Polytechnic University, Humboldt Office of Research.</p>
-        <p style="font-size: 12px;"><em>Need help? Just Ask!</em></p>
+        <p>
+            Welcome to Humboldt Helper, your AI guide to find the right files, links, and information across the California State Polytechnic University, Humboldt Office of Research.
+        </p>
+        <p><em>Need help? Just Ask!</em></p>
     </div>
-    <div style="font-size: 14px;">
-        <strong>Quick Contacts</strong><br>
-        <ul style="padding-left: 1rem; list-style-type: disc;">
-            <li>Website: Humboldt Research</li>
-            <li>Phone:</li>
-            <li>Email:</li>
-            <li>Instagram</li>
-        </ul>
+    <div>
+        <hr style="border: 0.5px solid #fff; margin: 1rem 0;">
+        <div>
+            <strong>Quick Contacts</strong><br><br>
+            <p>
+                <strong>Website:</strong><br>
+                <a href="https://www.humboldt.edu/research" target="_blank" style="color: #FDB515;">humboldt.edu/research</a>
+            </p>
+            <p>
+                <strong>Phone:</strong> (707) 826-3011
+            </p>
+            <p>
+                <strong>Instagram:</strong><br>
+                <a href="https://www.instagram.com/humboldtpolytechnic/" target="_blank" style="color: #FDB515;">@humboldtpolytechnic</a>
+            </p>
+        </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 # --- Title and Subtitle ---
 st.markdown("""
-<div class="main-title">Humboldt Helper</div>
+<div class="main-title"><strong>Humboldt Helper</strong></div>
 <div class="subtitle">Let the exploration begin.</div>
 """, unsafe_allow_html=True)
 
