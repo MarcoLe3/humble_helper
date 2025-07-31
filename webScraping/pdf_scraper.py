@@ -1,84 +1,76 @@
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
+from tqdm import tqdm
 import os
 import re
-import csv
 
-# Target URL
-BASE_URL = "https://www.humboldt.edu/research/board/meetings-minutes-agendas"
+#CODE best works in Local Computer Env as it downloads PDFs to local downloads dir
+# Output folder
+DOWNLOAD_DIR = "downloaded_pdfs"
+os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 
-# Output folders
-PDF_DIR = "humboldt_meeting_pdfs"
-METADATA_CSV = "meeting_metadata.csv"
+def is_valid_url(url):
+    parsed = urlparse(url)
+    return bool(parsed.netloc) and bool(parsed.scheme)
 
-# Create output folder
-os.makedirs(PDF_DIR, exist_ok=True)
+def sanitize_filename(text):
+    return re.sub(r'[\\/*?:"<>|]', "", text).strip().replace(" ", "_")[:150]
 
-def extract_pdf_links(base_url):
-    response = requests.get(base_url)
-    soup = BeautifulSoup(response.content, 'html.parser')
-    pdf_links = []
+def get_pdf_links_with_titles(base_url):
+    try:
+        response = requests.get(base_url, timeout=10)
+        soup = BeautifulSoup(response.text, "html.parser")
+        body = soup.find("body")
+        if not body:
+            print("[WARNING] No <body> tag found.")
+            return []
 
-    for link in soup.find_all('a', href=True):
-        href = link['href']
-        if href.endswith('.pdf'):
-            full_url = urljoin(base_url, href)
-            text = link.get_text(strip=True)
-            pdf_links.append((full_url, text))
+        pdf_links = []
+        current_h3 = "General"
 
-    return pdf_links
+        for elem in body.descendants:
+            if elem.name == "h3":
+                current_h3 = elem.get_text(strip=True)
 
-def infer_meeting_date(text_or_filename):
-    # Try to extract a date pattern
-    date_match = re.search(r'(\b(?:January|February|March|April|May|June|July|August|September|October|November|December)\b[\s\-\.]?\d{1,2},?\s?\d{4})', text_or_filename, re.IGNORECASE)
-    if date_match:
-        return date_match.group(1)
+            if elem.name == "a" and elem.has_attr("href") and elem["href"].lower().endswith(".pdf"):
+                pdf_url = urljoin(base_url, elem["href"])
+                if not is_valid_url(pdf_url):
+                    continue
 
-    date_match_alt = re.search(r'(\d{1,2}[-/]\d{1,2}[-/]\d{2,4})', text_or_filename)
-    if date_match_alt:
-        return date_match_alt.group(1)
+                link_text = elem.get_text(strip=True) or "untitled"
+                prefix = sanitize_filename(current_h3)
+                title = sanitize_filename(link_text)
+                filename = f"{prefix} - {title}.pdf"
 
-    return "Unknown"
+                pdf_links.append((pdf_url, filename))
 
-def download_pdfs_and_metadata(pdf_links):
-    metadata = []
+        return pdf_links
 
-    for url, label in pdf_links:
-        filename = os.path.basename(url).split("?")[0]
-        save_path = os.path.join(PDF_DIR, filename)
+    except Exception as e:
+        print(f"[ERROR] Failed to extract PDF links from {base_url}: {e}")
+        return []
 
+def download_pdfs(pdf_links):
+    for url, filename in tqdm(pdf_links, desc="📥 Downloading PDFs"):
+        path = os.path.join(DOWNLOAD_DIR, filename)
         try:
-            print(f"Downloading: {url}")
-            response = requests.get(url)
-            with open(save_path, 'wb') as f:
+            response = requests.get(url, timeout=15)
+            response.raise_for_status()
+            with open(path, 'wb') as f:
                 f.write(response.content)
-
-            date = infer_meeting_date(label + " " + filename)
-            metadata.append({
-                "file_name": filename,
-                "url": url,
-                "meeting_title": label,
-                "meeting_date": date
-            })
-
         except Exception as e:
-            print(f"Failed to download {url}: {e}")
-
-    return metadata
-
-def save_metadata_to_csv(metadata, csv_path):
-    with open(csv_path, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=["file_name", "url", "meeting_title", "meeting_date"])
-        writer.writeheader()
-        for row in metadata:
-            writer.writerow(row)
-
-def main():
-    pdf_links = extract_pdf_links(BASE_URL)
-    metadata = download_pdfs_and_metadata(pdf_links)
-    save_metadata_to_csv(metadata, METADATA_CSV)
-    print(f"Downloaded {len(metadata)} PDFs and saved metadata to {METADATA_CSV}")
+            print(f"[ERROR] Failed to download {url}: {e}")
 
 if __name__ == "__main__":
-    main()
+    BASE_URL = "https://www.humboldt.edu/research/board/meetings-minutes-agendas?page=4"
+    print(f"🔍 Searching for PDFs at: {BASE_URL}")
+
+    pdf_links = get_pdf_links_with_titles(BASE_URL)
+    print(f"🔗 Found {len(pdf_links)} PDF links.")
+
+    if pdf_links:
+        download_pdfs(pdf_links)
+        print(f"✅ Done. PDFs saved in '{DOWNLOAD_DIR}'")
+    else:
+        print("⚠️ No PDFs found.")
