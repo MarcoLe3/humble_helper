@@ -1,5 +1,7 @@
 import streamlit as st
 import boto3
+import base64
+import os
 from typing import List, Dict, Any
 
 # --- Page Setup ---
@@ -8,10 +10,23 @@ st.set_page_config(
     layout="wide"
 )
 
-# --- Google Fonts (Inter Thin) ---
+# --- Google Fonts ---
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
+
+# --- Function to Base64 Encode Image ---
+def get_base64_image(image_path: str) -> str:
+    with open(image_path, "rb") as img_file:
+        encoded = base64.b64encode(img_file.read()).decode()
+    return f"data:image/png;base64,{encoded}"
+
+# --- Load logo from local images path ---
+script_dir = os.path.dirname(os.path.abspath(__file__))
+streamlit_path = script_dir.replace("streamlit", "Streamlit")
+image_path = os.path.join(streamlit_path, "images", "Logo.png")
+
+logo_base64 = get_base64_image(image_path)
 
 # --- Custom CSS Styling ---
 st.markdown(f"""
@@ -95,7 +110,6 @@ st.markdown(f"""
         padding: 10px 0;
     }}
 
-    /* Hide assistant avatar icon */
     .stChatMessage [data-testid="chat-avatar-icon"] {{
         display: none !important;
     }}
@@ -149,9 +163,9 @@ st.markdown(f"""
 st.markdown(f"""
 <div class="fixed-sidebar">
     <div>
-        <h3 style="font-family: serif; line-height: 1.2; margin-bottom: 1.25rem;">
-            Cal Poly <br> <span style='color: #FDB515;'>Humboldt.</span>
-        </h3>
+        <div style="text-align: center; margin-top: 2rem; margin-bottom: 2.5rem;">
+            <img src="{logo_base64}" alt="Cal Poly Humboldt Logo" style="width: 240px;" />
+        </div>
         <p>
             Welcome to Humboldt Helper, your AI guide to find the right files, links, and information across the California State Polytechnic University, Humboldt Office of Research.
         </p>
@@ -221,7 +235,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# --- Redesigned Search Form ---
+# --- Search Form ---
 st.markdown('<div class="lower-search-bar">', unsafe_allow_html=True)
 
 with st.form("search_form", clear_on_submit=True):
@@ -239,8 +253,9 @@ with st.form("search_form", clear_on_submit=True):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)  # Close .lower-search-bar
+st.markdown('</div>', unsafe_allow_html=True)
 
+# --- Handle Submission ---
 if submitted and query.strip():
     user_prompt = f"[{category}] {query.strip()}"
     st.session_state.messages.append({"role": "user", "content": user_prompt})
