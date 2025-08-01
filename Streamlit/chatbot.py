@@ -1,7 +1,6 @@
 import streamlit as st
 import boto3
 from typing import List, Dict, Any
-# import base64  # Commented out since image is disabled
 
 # --- Page Setup ---
 st.set_page_config(
@@ -62,27 +61,43 @@ st.markdown(f"""
     }}
 
     .main-title {{
-        font-size: 40px;
-        font-family: serif;
+        font-size: 22px;
+        font-family: 'Inter', sans-serif;
+        font-weight: bold;
         color: #000000;
         margin-bottom: 0.25rem;
-        font-weight: bold;
     }}
 
     .subtitle {{
-        font-size: 18px;
-        margin-top: 0.5rem;
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        font-weight: 300;
         color: #333333;
-        font-family: sans-serif;
+        margin-top: 0.25rem;
+        margin-bottom: 0.25rem;
+    }}
+
+    .instruction {{
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        color: #333333;
+        margin-bottom: 1.5rem;
     }}
 
     .stChatMessage div[data-testid="stMarkdownContainer"] p {{
-        font-family: serif;
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        font-weight: 300;
         color: #000000 !important;
     }}
 
     .stChatMessage {{
         padding: 10px 0;
+    }}
+
+    /* Hide assistant avatar icon */
+    .stChatMessage [data-testid="chat-avatar-icon"] {{
+        display: none !important;
     }}
 
     section[data-testid="stForm"] {{
@@ -123,6 +138,10 @@ st.markdown(f"""
     .search-bar button:hover {{
         background-color: #333;
     }}
+
+    .lower-search-bar {{
+        margin-top: 3rem;
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -130,11 +149,6 @@ st.markdown(f"""
 st.markdown(f"""
 <div class="fixed-sidebar">
     <div>
-        <!--
-        <div style='text-align: center; margin-bottom: 1rem;'>
-            <img src="data:image/png;base64,{{image_base64}}" width="120"/>
-        </div>
-        -->
         <h3 style="font-family: serif; line-height: 1.2; margin-bottom: 1.25rem;">
             Cal Poly <br> <span style='color: #FDB515;'>Humboldt.</span>
         </h3>
@@ -144,17 +158,17 @@ st.markdown(f"""
         <p><em>Need help? Just Ask!</em></p>
     </div>
     <div>
-        <hr style="border: 0.5px solid #fff; margin: 1rem 0;">
-        <div>
-            <strong>Quick Contacts</strong><br><br>
-            <p>
+        <hr style="border: 0.5px solid #fff; margin: 0.5rem 0 0.75rem 0;">
+        <div style="line-height: 1.5;">
+            <strong>Contacts</strong><br><br>
+            <p style="margin-bottom: 0.5rem;">
                 <strong>Website:</strong><br>
                 <a href="https://www.humboldt.edu/research" target="_blank" style="color: #FDB515;">humboldt.edu/research</a>
             </p>
-            <p>
+            <p style="margin-bottom: 0.5rem;">
                 <strong>Phone:</strong> (707) 826-3011
             </p>
-            <p>
+            <p style="margin-bottom: 0;">
                 <strong>Instagram:</strong><br>
                 <a href="https://www.instagram.com/humboldtpolytechnic/" target="_blank" style="color: #FDB515;">@humboldtpolytechnic</a>
             </p>
@@ -163,10 +177,13 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# --- Title and Subtitle ---
+# --- Title, Subtitle, and Instructions ---
 st.markdown("""
-<div class="main-title"><strong>Humboldt Helper</strong></div>
+<div class="main-title">Humboldt Helper</div>
 <div class="subtitle">Let the exploration begin.</div>
+<p class="instruction">
+Please select a category, type your question, and click the send button.
+</p>
 """, unsafe_allow_html=True)
 
 # --- Bedrock Client Setup ---
@@ -205,6 +222,8 @@ for message in st.session_state.messages:
         st.write(message["content"])
 
 # --- Redesigned Search Form ---
+st.markdown('<div class="lower-search-bar">', unsafe_allow_html=True)
+
 with st.form("search_form", clear_on_submit=True):
     st.markdown('<div class="search-bar">', unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1.5, 5, 0.6])
@@ -220,16 +239,18 @@ with st.form("search_form", clear_on_submit=True):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    if submitted and query.strip():
-        user_prompt = f"[{category}] {query.strip()}"
-        st.session_state.messages.append({"role": "user", "content": user_prompt})
+st.markdown('</div>', unsafe_allow_html=True)  # Close .lower-search-bar
 
-        with st.chat_message("user"):
-            st.write(user_prompt)
+if submitted and query.strip():
+    user_prompt = f"[{category}] {query.strip()}"
+    st.session_state.messages.append({"role": "user", "content": user_prompt})
 
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking..."):
-                response = invoke_model(st.session_state.messages)
+    with st.chat_message("user"):
+        st.write(user_prompt)
 
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.rerun()
+    with st.chat_message("assistant"):
+        with st.spinner("Thinking..."):
+            response = invoke_model(st.session_state.messages)
+
+    st.session_state.messages.append({"role": "assistant", "content": response})
+    st.rerun()
