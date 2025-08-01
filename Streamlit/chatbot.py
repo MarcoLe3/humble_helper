@@ -12,7 +12,7 @@ st.set_page_config(
 
 # --- Google Fonts ---
 st.markdown("""
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300&family=Poppins:wght@600&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
 
 # --- Function to Base64 Encode Image ---
@@ -53,6 +53,8 @@ st.markdown(f"""
     .stApp {{
         background-color: #e6e6e6;
         margin-left: 260px !important;
+        padding-top: 3rem;
+        padding-bottom: 100px;
     }}
 
     header[data-testid="stHeader"] {{
@@ -76,9 +78,9 @@ st.markdown(f"""
     }}
 
     .main-title {{
-        font-size: 22px;
-        font-family: 'Inter', sans-serif;
-        font-weight: bold;
+        font-size: 26px;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
         color: #000000;
         margin-bottom: 0.25rem;
     }}
@@ -114,16 +116,14 @@ st.markdown(f"""
         display: none !important;
     }}
 
-    section[data-testid="stForm"] {{
-        background-color: #cfe3dc !important;
+    .fixed-search-bar {{
+        position: fixed;
+        bottom: 0;
+        left: 260px;
+        width: calc(100% - 260px);
+        background-color: transparent;
         padding: 1rem;
-        border-top: 1px solid #aaa;
-        margin-bottom: 1rem;
-    }}
-
-    div[data-testid="column"] > div {{
-        display: flex;
-        align-items: center;
+        z-index: 1000;
     }}
 
     .search-bar select,
@@ -151,10 +151,6 @@ st.markdown(f"""
 
     .search-bar button:hover {{
         background-color: #333;
-    }}
-
-    .lower-search-bar {{
-        margin-top: 3rem;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -191,13 +187,15 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# --- Title, Subtitle, and Instructions ---
+# --- Main Content Container ---
 st.markdown("""
-<div class="main-title">Humboldt Helper</div>
-<div class="subtitle">Let the exploration begin.</div>
-<p class="instruction">
-Please select a category, type your question, and click the send button.
-</p>
+<div class="main-content">
+    <div class="main-title">Humboldt Helper</div>
+    <p class="instruction">
+        Please select a category, type your question, and click the send button.
+    </p>
+    <div class="subtitle">Let the exploration begin.</div>
+</div>
 """, unsafe_allow_html=True)
 
 # --- Bedrock Client Setup ---
@@ -235,8 +233,8 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# --- Search Form ---
-st.markdown('<div class="lower-search-bar">', unsafe_allow_html=True)
+# --- Fixed Search Form ---
+st.markdown('<div class="fixed-search-bar">', unsafe_allow_html=True)
 
 with st.form("search_form", clear_on_submit=True):
     st.markdown('<div class="search-bar">', unsafe_allow_html=True)
