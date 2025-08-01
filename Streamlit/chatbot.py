@@ -5,189 +5,186 @@ import os
 from typing import List, Dict, Any
 
 # --- Page Setup ---
-st.set_page_config(
-    page_title="Humboldt Helper",
-    layout="wide"
-)
+st.set_page_config(page_title="Humboldt Helper", layout="wide")
 
 # --- Google Fonts ---
 st.markdown("""
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300&family=Poppins:wght@600&display=swap" rel="stylesheet">
 """, unsafe_allow_html=True)
 
-# --- Function to Base64 Encode Image ---
+# --- Load and Encode Image ---
 def get_base64_image(image_path: str) -> str:
     with open(image_path, "rb") as img_file:
-        encoded = base64.b64encode(img_file.read()).decode()
-    return f"data:image/png;base64,{encoded}"
+        return base64.b64encode(img_file.read()).decode()
 
-# --- Load logo from local images path ---
+# --- Load logo and avatars ---
 script_dir = os.path.dirname(os.path.abspath(__file__))
 streamlit_path = script_dir.replace("streamlit", "Streamlit")
+
 image_path = os.path.join(streamlit_path, "images", "Logo.png")
+user_icon_path = os.path.join(streamlit_path, "images", "user_icon.png")
+bot_icon_path = os.path.join(streamlit_path, "images", "robot_icon.png")
 
 logo_base64 = get_base64_image(image_path)
+user_icon = get_base64_image(user_icon_path)
+bot_icon = get_base64_image(bot_icon_path)
 
 # --- Custom CSS Styling ---
 st.markdown(f"""
-    <style>
-    .fixed-sidebar {{
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 260px;
-        height: 100%;
-        background-color: #004C46;
-        color: white;
-        padding: 2rem 1rem 1rem 1rem;
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        font-weight: 300;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-    }}
+<style>
+.fixed-sidebar {{
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 260px;
+    height: 100%;
+    background-color: #004C46;
+    color: white;
+    padding: 2rem 1rem 1rem 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 300;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+}}
 
-    .stApp {{
-        background-color: #e6e6e6;
-        margin-left: 260px !important;
-        padding-top: 3rem;
-        padding-bottom: 100px;
-    }}
+.stApp {{
+    background-color: #e6e6e6;
+    margin-left: 260px !important;
+    padding-top: 3rem;
+    padding-bottom: 100px;
+}}
 
-    header[data-testid="stHeader"] {{
-        background-color: #e6e6e6 !important;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 2rem 0 1rem;
-        border-bottom: 1px solid #ccc;
-    }}
+header[data-testid="stHeader"] {{
+    background-color: #e6e6e6 !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem 0 1rem;
+    border-bottom: 1px solid #ccc;
+}}
 
-    header[data-testid="stHeader"]::after {{
-        content: "AI SUMMER CAMP";
-        color: #b8860b;
-        font-weight: bold;
-        font-size: 14px;
-        position: absolute;
-        right: 2rem;
-        top: 1.5rem;
-        font-family: sans-serif;
-    }}
+header[data-testid="stHeader"]::after {{
+    content: "AI SUMMER CAMP";
+    color: #b8860b;
+    font-weight: bold;
+    font-size: 14px;
+    position: absolute;
+    right: 2rem;
+    top: 1.5rem;
+    font-family: sans-serif;
+}}
 
-    .main-title {{
-        font-size: 26px;
-        font-family: 'Poppins', sans-serif;
-        font-weight: 600;
-        color: #000000;
-        margin-bottom: 0.25rem;
-    }}
+.main-title {{
+    font-size: 26px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: #000000;
+    margin-bottom: 0.25rem;
+}}
 
-    .subtitle {{
-        font-size: 14px;
-        font-family: 'Inter', sans-serif;
-        font-weight: 300;
-        color: #333333;
-        margin-top: 0.25rem;
-        margin-bottom: 0.25rem;
-    }}
+.subtitle {{
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 300;
+    color: #333333;
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+}}
 
-    .instruction {{
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        color: #333333;
-        margin-bottom: 1.5rem;
-    }}
+.instruction {{
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #333333;
+    margin-bottom: 1.5rem;
+}}
 
-    .stChatMessage div[data-testid="stMarkdownContainer"] p {{
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        font-weight: 300;
-        color: #000000 !important;
-    }}
+.message-bubble {{
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+}}
 
-    .stChatMessage {{
-        padding: 10px 0;
-    }}
+.message-bubble img {{
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    margin-right: 12px;
+    margin-top: 4px;
+}}
 
-    .stChatMessage [data-testid="chat-avatar-icon"] {{
-        display: none !important;
-    }}
+.message-content {{
+    padding: 12px 16px;
+    border-radius: 16px;
+    max-width: 80%;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}}
 
-    .fixed-search-bar {{
-        position: fixed;
-        bottom: 0;
-        left: 260px;
-        width: calc(100% - 260px);
-        background-color: transparent;
-        padding: 1rem;
-        z-index: 1000;
-    }}
+.message-user {{
+    background-color: #444;
+    color: white;
+}}
 
-    .search-bar select,
-    .search-bar input,
-    .search-bar button {{
-        height: 45px !important;
-        border: none;
-        border-radius: 8px;
-        padding: 0 12px;
-        background-color: #26262f;
-        color: white;
-        font-size: 15px;
-    }}
+.message-assistant {{
+    background-color: #f3f3f3;
+    color: #000;
+}}
 
-    .search-bar button {{
-        width: 45px;
-        padding: 0;
-        font-size: 20px;
-        background-color: #191920;
-        border-radius: 10px;
-        box-shadow: inset 0 0 0 1px #444;
-        transition: background 0.2s ease;
-        cursor: pointer;
-    }}
+.search-bar select,
+.search-bar input,
+.search-bar button {{
+    height: 45px !important;
+    border: none;
+    border-radius: 8px;
+    padding: 0 12px;
+    background-color: #26262f;
+    color: white;
+    font-size: 15px;
+}}
 
-    .search-bar button:hover {{
-        background-color: #333;
-    }}
-    </style>
+.search-bar button {{
+    width: 45px;
+    padding: 0;
+    font-size: 20px;
+    background-color: #191920;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px #444;
+    transition: background 0.2s ease;
+    cursor: pointer;
+}}
+
+.search-bar button:hover {{
+    background-color: #333;
+}}
+</style>
 """, unsafe_allow_html=True)
 
-# --- Sidebar Content ---
+# --- Sidebar ---
 st.markdown(f"""
 <div class="fixed-sidebar">
     <div>
         <div style="text-align: center; margin-top: 2rem; margin-bottom: 2.5rem;">
-            <img src="{logo_base64}" alt="Cal Poly Humboldt Logo" style="width: 240px;" />
+            <img src="data:image/png;base64,{logo_base64}" alt="Cal Poly Humboldt Logo" style="width: 240px;" />
         </div>
-        <p>
-            Welcome to Humboldt Helper, your AI guide to find the right files, links, and information across the California State Polytechnic University, Humboldt Office of Research.
-        </p>
+        <p>Welcome to Humboldt Helper, your AI guide to find the right files, links, and information across the California State Polytechnic University, Humboldt Office of Research.</p>
         <p><em>Need help? Just Ask!</em></p>
     </div>
     <div>
         <hr style="border: 0.5px solid #fff; margin: 0.5rem 0 0.75rem 0;">
         <div style="line-height: 1.5;">
-            <strong>Contacts</strong><br><br>
-            <p style="margin-bottom: 0.5rem;">
-                <strong>Website:</strong><br>
+            <strong>Source</strong><br><br>
+            <p><strong>Website:</strong><br>
                 <a href="https://www.humboldt.edu/research" target="_blank" style="color: #FDB515;">humboldt.edu/research</a>
-            </p>
-            <p style="margin-bottom: 0.5rem;">
-                <strong>Phone:</strong> (707) 826-3011
-            </p>
-            <p style="margin-bottom: 0;">
-                <strong>Instagram:</strong><br>
-                <a href="https://www.instagram.com/humboldtpolytechnic/" target="_blank" style="color: #FDB515;">@humboldtpolytechnic</a>
             </p>
         </div>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
-# --- Main Content Container ---
+# --- Main Header ---
 st.markdown("""
 <div class="main-content">
     <div class="main-title">Humboldt Helper</div>
@@ -198,12 +195,11 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- Bedrock Client Setup ---
+# --- Claude Model Call ---
 @st.cache_resource
 def get_bedrock_client() -> Any:
     return boto3.client('bedrock-runtime', region_name='us-west-2')
 
-# --- Claude Model Call ---
 def invoke_model(messages: List[Dict[str, str]]) -> str:
     client = get_bedrock_client()
     bedrock_messages = [{
@@ -228,14 +224,24 @@ if "messages" not in st.session_state:
         "content": "Hi! I’m Humboldt Helper. I can help you locate research documents, funding opportunities, and resources regarding research. How can I assist you?"
     }]
 
-# --- Display Chat History ---
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.write(message["content"])
+# --- Chat Message Display: both left-aligned ---
+for msg in st.session_state.messages:
+    is_user = msg["role"] == "user"
+    avatar = user_icon if is_user else bot_icon
+    css_class = "message-user" if is_user else "message-assistant"
+    sender = "You" if is_user else "Humboldt Helper"
 
-# --- Fixed Search Form ---
-st.markdown('<div class="fixed-search-bar">', unsafe_allow_html=True)
+    st.markdown(f"""
+    <div class="message-bubble">
+        <img src="data:image/png;base64,{avatar}">
+        <div class="message-content {css_class}">
+            <div style="font-size: 13px; font-weight: bold; margin-bottom: 4px;">{sender}</div>
+            <div style="font-size: 14px; font-family: Inter, sans-serif;">{msg['content']}</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
+# --- Input Form ---
 with st.form("search_form", clear_on_submit=True):
     st.markdown('<div class="search-bar">', unsafe_allow_html=True)
     col1, col2, col3 = st.columns([1.5, 5, 0.6])
@@ -251,19 +257,13 @@ with st.form("search_form", clear_on_submit=True):
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown('</div>', unsafe_allow_html=True)
-
-# --- Handle Submission ---
+# --- On Submit ---
 if submitted and query.strip():
     user_prompt = f"[{category}] {query.strip()}"
     st.session_state.messages.append({"role": "user", "content": user_prompt})
 
-    with st.chat_message("user"):
-        st.write(user_prompt)
-
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = invoke_model(st.session_state.messages)
+    with st.spinner("Thinking..."):
+        response = invoke_model(st.session_state.messages)
 
     st.session_state.messages.append({"role": "assistant", "content": response})
     st.rerun()
